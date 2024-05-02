@@ -16,7 +16,7 @@ const db = new sqlite3.Database('./oppgaveplanlegger.db', (err) => {
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// Serve static files (frontend files)
+// Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Endpoint to get all tasks
@@ -46,21 +46,6 @@ app.post('/tasks', (req, res) => {
     });
 });
 
-// Endpoint to update a task's status
-app.put('/tasks/:id', (req, res) => {
-    const taskId = req.params.id;
-    const { status } = req.body;
-    const query = 'UPDATE tasks SET status = ? WHERE id = ?';
-
-    db.run(query, [status, taskId], function (err) {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.send('Task status updated.');
-        }
-    });
-});
-
 // Endpoint to delete a task
 app.delete('/tasks/:id', (req, res) => {
     const taskId = req.params.id;
@@ -70,7 +55,7 @@ app.delete('/tasks/:id', (req, res) => {
         if (err) {
             res.status(500).json({ error: err.message });
         } else {
-            res.send('Task deleted.');
+            res.send(`Task with ID ${taskId} deleted.`);
         }
     });
 });
