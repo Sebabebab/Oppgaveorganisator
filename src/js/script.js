@@ -12,7 +12,6 @@ var notStartedTasks = document.getElementById("not-started-tasks");
 var inProgressTasks = document.getElementById("in-progress-tasks");
 var completedTasks = document.getElementById("completed-tasks");
 
-
 btn.addEventListener("click", function() {
     modal.style.display = "block"; 
 });
@@ -25,9 +24,9 @@ closeModal.addEventListener("click", function() {
 
 var taskForm = document.getElementById("taskForm");
 taskForm.addEventListener("submit", function(event) {
-    event.preventDefault();
+    event.preventDefault(); 
 
-
+   
     var taskTitle = document.getElementById("taskTitle").value;
     var taskInfo = document.getElementById("taskInfo").value;
     var bgColor = document.getElementById("bgColor").value;
@@ -35,31 +34,33 @@ taskForm.addEventListener("submit", function(event) {
 
     var newTaskBox = document.createElement("div");
     newTaskBox.className = "task-box";
+    newTaskBox.id = "task-" + Date.now(); 
     newTaskBox.style.backgroundColor = bgColor;
     newTaskBox.innerHTML = `
         <strong>${taskTitle}</strong><br>
         ${taskInfo}
+        <span class="delete-task">&times;</span> <!-- Sletteknapp -->
     `;
 
-    newTaskBox.id = "task-" + Date.now();
+   
+    newTaskBox.querySelector(".delete-task").addEventListener("click", function() {
+        newTaskBox.remove(); 
+    });
+
+
     newTaskBox.setAttribute("draggable", "true");
-
-
     newTaskBox.addEventListener("dragstart", function(event) {
-        event.dataTransfer.setData("text/plain", event.target.id); 
+        event.dataTransfer.setData("text/plain", newTaskBox.id); 
         event.target.style.opacity = "0.5"; 
     });
     newTaskBox.addEventListener("dragend", function(event) {
         event.target.style.opacity = "1"; 
     });
 
-
     notStartedTasks.appendChild(newTaskBox);
-
 
     modal.style.display = "none";
 });
-
 
 var taskLists = document.querySelectorAll(".task-list");
 
