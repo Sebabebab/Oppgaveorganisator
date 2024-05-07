@@ -121,7 +121,7 @@ body {
 .add-task-button {
     text-align: center;
     padding: 20px;
-    margin-top: 70px; 
+    margin-top: 60px;
 }
 
 #addTaskBtn, 
@@ -131,22 +131,22 @@ body {
     font-size: 18px;
     color: #ffffff;
     background-color: #11998e;
-    border: none;
     border-radius: 15px;
+    border: none;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
 #addTaskBtn {
-    margin-right: 10px; 
+    margin-right: 10px;
 }
 
 .export-button {
-    margin-right: 10px; 
+    margin-right: 10px;
 }
 
-#addTaskBtn:hover, 
-.export-button:hover, 
-.import-button:hover {
+.import-button:hover,
+.export-button:hover,
+#addTaskBtn:hover {
     background-color: #38ef7d;
 }
