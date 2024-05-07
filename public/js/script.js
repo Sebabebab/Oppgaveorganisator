@@ -63,6 +63,64 @@ function downloadJSON() {
         .catch((error) => console.error('Error exporting to JSON:', error));
 }
 
+function importJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const jsonData = JSON.parse(e.target.result);
+        fetch('/import-json', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ tasks: jsonData }),
+        })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('Failed to import data');
+            }
+            return response.text();
+        })
+        .then(() => {
+            fetchTasks().then((tasks) => renderTasks(tasks));
+        })
+        .catch((error) => console.error('Error importing JSON:', error));
+    };
+
+    reader.readAsText(file);
+}
+
+function renderTask(task, targetContainer) {
+    const taskBox = document.createElement('div');
+    taskBox.className = 'task-box';
+    taskBox.id = `task-${task.id}`;
+    taskBox.style.backgroundColor = task.color;
+    taskBox.innerHTML = `
+        <strong>${task.title}</strong><br>
+        ${task.info}
+        <span class="delete-task">&times;</span>
+    `;
+
+    taskBox.querySelector('.delete-task').addEventListener('click', function () {
+        deleteTask(task.id).then(() => {
+            taskBox.remove();
+        });
+    });
+
+    taskBox.setAttribute('draggable', 'true');
+    taskBox.addEventListener('dragstart', function (event) {
+        event.dataTransfer.setData('text/plain', task.id);
+        event.target.style.opacity = '0.5';
+    });
+    taskBox.addEventListener('dragend', function (event) {
+        event.target.style.opacity = '1';
+    });
+
+    targetContainer.appendChild(taskBox);
+}
+
 function renderTasks(tasks) {
     const notStartedTasks = document.getElementById('not-started-tasks');
     const inProgressTasks = document.getElementById('in-progress-tasks');
@@ -73,40 +131,15 @@ function renderTasks(tasks) {
     completedTasks.innerHTML = '';
 
     tasks.forEach((task) => {
-        const taskBox = document.createElement('div');
-        taskBox.className = 'task-box';
-        taskBox.id = `task-${task.id}`;
-        taskBox.style.backgroundColor = task.color;
-        taskBox.innerHTML = `
-            <strong>${task.title}</strong><br>
-            ${task.info}
-            <span class="delete-task">&times;</span>
-        `;
-
-        taskBox.querySelector('.delete-task').addEventListener('click', function () {
-            deleteTask(task.id).then(() => {
-                taskBox.remove();
-            });
-        });
-
-        taskBox.setAttribute('draggable', 'true');
-        taskBox.addEventListener('dragstart', function (event) {
-            event.dataTransfer.setData('text/plain', task.id);
-            event.target.style.opacity = '0.5';
-        });
-        taskBox.addEventListener('dragend', function (event) {
-            event.target.style.opacity = '1';
-        });
-
         switch (task.status) {
             case 'Ikke startet':
-                notStartedTasks.appendChild(taskBox);
+                renderTask(task, notStartedTasks);
                 break;
             case 'Jobber med':
-                inProgressTasks.appendChild(taskBox);
+                renderTask(task, inProgressTasks);
                 break;
             case 'Ferdig':
-                completedTasks.appendChild(taskBox);
+                renderTask(task, completedTasks);
                 break;
         }
     });
@@ -141,53 +174,24 @@ function renderTasks(tasks) {
     });
 }
 
-fetchTasks().then((tasks) => {
-    renderTasks(tasks);
-});
+fetchTasks().then((tasks) => renderTasks(tasks));
 
 const addTaskBtn = document.getElementById('addTaskBtn');
 addTaskBtn.addEventListener('click', function () {
-    const title = prompt('Oppgave Tittel:');
-    const info = prompt('Oppgave Info:');
-    const color = prompt('Velg Bakgrunnsfarge (Engelsk):', 'white');
+    const title = prompt('Enter task title:');
+    const info = prompt('Enter task info:');
+    const color = prompt('Choose background color (hex format):', '#ffffff'); 
     const status = 'Ikke startet';
 
     if (title) {
-        const newTask = {
+        createTask({
             title,
             info,
             color,
             status,
-        };
-
-        createTask(newTask).then((createdTask) => {
-            const taskBox = document.createElement('div');
-            taskBox.className = 'task-box';
-            taskBox.id = `task-${createdTask.id}`;
-            taskBox.style.backgroundColor = createdTask.color;
-            taskBox.innerHTML = `
-                <strong>${createdTask.title}</strong><br>
-                ${createdTask.info}
-                <span class="delete-task">&times;</span>
-            `;
-
-            taskBox.querySelector('.delete-task').addEventListener('click', function () {
-                deleteTask(createdTask.id).then(() => {
-                    taskBox.remove();
-                });
-            });
-
-            taskBox.setAttribute('draggable', 'true');
-            taskBox.addEventListener('dragstart', function (event) {
-                event.dataTransfer.setData('text/plain', createdTask.id);
-                event.target.style.opacity = '0.5';
-            });
-            taskBox.addEventListener('dragend', function (event) {
-                event.target.style.opacity = '1';
-            });
-
+        }).then((createdTask) => {
             const notStartedTasks = document.getElementById('not-started-tasks');
-            notStartedTasks.appendChild(taskBox);
+            renderTask(createdTask, notStartedTasks);
         });
     }
 });
@@ -196,8 +200,19 @@ const exportJSONBtn = document.createElement('button');
 exportJSONBtn.innerText = 'Eksporter til JSON';
 exportJSONBtn.className = 'export-button';
 exportJSONBtn.addEventListener('click', downloadJSON);
+
+const importJSONLabel = document.createElement('label');
+importJSONLabel.className = 'import-button';
+importJSONLabel.innerText = 'Import JSON file';
+
+const importJSONInput = document.createElement('input');
+importJSONInput.type = 'file';
+importJSONInput.accept = 'application/json';
+importJSONInput.style.display = 'none';
+importJSONInput.addEventListener('change', importJSON);
+
+importJSONLabel.appendChild(importJSONInput);
+
 const addTaskContainer = document.querySelector('.add-task-button');
 addTaskContainer.appendChild(exportJSONBtn);
-
-
-
+addTaskContainer.appendChild(importJSONLabel);

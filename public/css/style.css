@@ -121,11 +121,12 @@ body {
 .add-task-button {
     text-align: center;
     padding: 20px;
-    margin-top: 60px; 
+    margin-top: 70px; 
 }
 
 #addTaskBtn, 
-.export-button {
+.export-button, 
+.import-button {
     padding: 15px 30px;
     font-size: 18px;
     color: #ffffff;
@@ -136,7 +137,16 @@ body {
     transition: background-color 0.3s ease;
 }
 
+#addTaskBtn {
+    margin-right: 10px; 
+}
+
+.export-button {
+    margin-right: 10px; 
+}
+
 #addTaskBtn:hover, 
-.export-button:hover { 
+.export-button:hover, 
+.import-button:hover {
     background-color: #38ef7d;
 }
