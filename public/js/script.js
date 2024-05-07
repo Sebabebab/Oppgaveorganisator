@@ -1,10 +1,8 @@
-
 function fetchTasks() {
     return fetch('/tasks')
         .then((response) => response.json())
         .catch((error) => console.error('Error fetching tasks:', error));
 }
-
 
 function createTask(taskData) {
     return fetch('/tasks', {
@@ -30,11 +28,10 @@ function updateTaskStatus(taskId, newStatus) {
         if (!response.ok) {
             throw new Error('Failed to update task status');
         }
-        return response.text(); 
+        return response.text();
     })
     .catch((error) => console.error('Error updating task status:', error));
 }
-
 
 function deleteTask(taskId) {
     return fetch(`/tasks/${taskId}`, {
@@ -44,49 +41,62 @@ function deleteTask(taskId) {
         if (!response.ok) {
             throw new Error('Failed to delete task');
         }
-        return response.text(); 
+        return response.text();
     })
     .catch((error) => console.error('Error deleting task:', error));
 }
 
+function downloadJSON() {
+    fetch('/export-json')
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('Failed to export data');
+            }
+            return response.blob();
+        })
+        .then((blob) => {
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.download = 'tasks.json';
+            downloadLink.click();
+        })
+        .catch((error) => console.error('Error exporting to JSON:', error));
+}
 
 function renderTasks(tasks) {
     const notStartedTasks = document.getElementById('not-started-tasks');
     const inProgressTasks = document.getElementById('in-progress-tasks');
     const completedTasks = document.getElementById('completed-tasks');
 
-    notStartedTasks.innerHTML = ''; 
-    inProgressTasks.innerHTML = ''; 
-    completedTasks.innerHTML = ''; 
+    notStartedTasks.innerHTML = '';
+    inProgressTasks.innerHTML = '';
+    completedTasks.innerHTML = '';
 
     tasks.forEach((task) => {
         const taskBox = document.createElement('div');
         taskBox.className = 'task-box';
-        taskBox.id = `task-${task.id}`; 
+        taskBox.id = `task-${task.id}`;
         taskBox.style.backgroundColor = task.color;
         taskBox.innerHTML = `
             <strong>${task.title}</strong><br>
             ${task.info}
-            <span class="delete-task">&times;</span> <!-- Delete button -->
+            <span class="delete-task">&times;</span>
         `;
 
-  
         taskBox.querySelector('.delete-task').addEventListener('click', function () {
             deleteTask(task.id).then(() => {
-                taskBox.remove(); 
+                taskBox.remove();
             });
         });
 
-
         taskBox.setAttribute('draggable', 'true');
         taskBox.addEventListener('dragstart', function (event) {
-            event.dataTransfer.setData('text/plain', task.id); 
-            event.target.style.opacity = '0.5'; 
+            event.dataTransfer.setData('text/plain', task.id);
+            event.target.style.opacity = '0.5';
         });
         taskBox.addEventListener('dragend', function (event) {
-            event.target.style.opacity = '1'; 
+            event.target.style.opacity = '1';
         });
-
 
         switch (task.status) {
             case 'Ikke startet':
@@ -105,16 +115,15 @@ function renderTasks(tasks) {
 
     taskLists.forEach((list) => {
         list.addEventListener('dragover', function (event) {
-            event.preventDefault(); 
+            event.preventDefault();
         });
 
         list.addEventListener('drop', function (event) {
-            event.preventDefault(); 
-            const taskId = event.dataTransfer.getData('text/plain'); 
-            const draggedTaskBox = document.getElementById(`task-${taskId}`); 
+            event.preventDefault();
+            const taskId = event.dataTransfer.getData('text/plain');
+            const draggedTaskBox = document.getElementById(`task-${taskId}`);
 
             if (draggedTaskBox) {
-                
                 let newStatus;
                 if (list.id === 'not-started-tasks') {
                     newStatus = 'Ikke startet';
@@ -124,27 +133,24 @@ function renderTasks(tasks) {
                     newStatus = 'Ferdig';
                 }
 
-
                 updateTaskStatus(taskId, newStatus).then(() => {
-                    list.appendChild(draggedTaskBox); 
+                    list.appendChild(draggedTaskBox);
                 });
             }
         });
     });
 }
 
-
 fetchTasks().then((tasks) => {
     renderTasks(tasks);
 });
 
-
 const addTaskBtn = document.getElementById('addTaskBtn');
 addTaskBtn.addEventListener('click', function () {
-    const title = prompt('Oppgave Tittel');
-    const info = prompt('Oppgave Informasjon:');
-    const color = prompt('Velg bakgrunnsfarge (Engelsk):', 'White'); 
-    const status = 'Ikke startet'; 
+    const title = prompt('Oppgave Tittel:');
+    const info = prompt('Oppgave Info:');
+    const color = prompt('Velg Bakgrunnsfarge (Engelsk):', 'white');
+    const status = 'Ikke startet';
 
     if (title) {
         const newTask = {
@@ -157,29 +163,27 @@ addTaskBtn.addEventListener('click', function () {
         createTask(newTask).then((createdTask) => {
             const taskBox = document.createElement('div');
             taskBox.className = 'task-box';
-            taskBox.id = `task-${createdTask.id}`; 
-            taskBox.style.backgroundColor = createdTask.color; 
+            taskBox.id = `task-${createdTask.id}`;
+            taskBox.style.backgroundColor = createdTask.color;
             taskBox.innerHTML = `
                 <strong>${createdTask.title}</strong><br>
                 ${createdTask.info}
-                <span class="delete-task">&times;</span> 
+                <span class="delete-task">&times;</span>
             `;
 
- 
             taskBox.querySelector('.delete-task').addEventListener('click', function () {
                 deleteTask(createdTask.id).then(() => {
-                    taskBox.remove(); 
+                    taskBox.remove();
                 });
             });
 
-
             taskBox.setAttribute('draggable', 'true');
             taskBox.addEventListener('dragstart', function (event) {
-                event.dataTransfer.setData('text/plain', createdTask.id); 
-                event.target.style.opacity = '0.5'; 
+                event.dataTransfer.setData('text/plain', createdTask.id);
+                event.target.style.opacity = '0.5';
             });
             taskBox.addEventListener('dragend', function (event) {
-                event.target.style.opacity = '1'; 
+                event.target.style.opacity = '1';
             });
 
             const notStartedTasks = document.getElementById('not-started-tasks');
@@ -187,3 +191,13 @@ addTaskBtn.addEventListener('click', function () {
         });
     }
 });
+
+const exportJSONBtn = document.createElement('button');
+exportJSONBtn.innerText = 'Eksporter til JSON';
+exportJSONBtn.className = 'export-button';
+exportJSONBtn.addEventListener('click', downloadJSON);
+const addTaskContainer = document.querySelector('.add-task-button');
+addTaskContainer.appendChild(exportJSONBtn);
+
+
+
