@@ -4,7 +4,7 @@ const path = require('path');
 
 const app = express();
 
-// Connect to SQLite database
+
 const db = new sqlite3.Database('./oppgaveplanlegger.db', (err) => {
     if (err) {
         console.error('Error connecting to SQLite database:', err.message);
@@ -13,13 +13,28 @@ const db = new sqlite3.Database('./oppgaveplanlegger.db', (err) => {
     }
 });
 
-// Middleware to parse JSON bodies
+
 app.use(express.json());
 
-// Serve static files
+
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Endpoint to get all tasks
+
+app.put('/tasks/:id', (req, res) => {
+    const taskId = req.params.id; 
+    const { status } = req.body; 
+    const query = 'UPDATE tasks SET status = ? WHERE id = ?';
+
+    db.run(query, [status, taskId], function (err) {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.send(`Task with ID ${taskId} status updated to ${status}.`);
+        }
+    });
+});
+
+
 app.get('/tasks', (req, res) => {
     const query = 'SELECT * FROM tasks';
 
@@ -27,14 +42,14 @@ app.get('/tasks', (req, res) => {
         if (err) {
             res.status(500).json({ error: err.message });
         } else {
-            res.json(rows);
+            res.json(rows); 
         }
     });
 });
 
-// Endpoint to create a new task
+
 app.post('/tasks', (req, res) => {
-    const { title, info, color, status } = req.body;
+    const { title, info, color, status } = req.body; 
     const query = 'INSERT INTO tasks (title, info, color, status) VALUES (?, ?, ?, ?)';
 
     db.run(query, [title, info, color, status], function (err) {
@@ -46,7 +61,6 @@ app.post('/tasks', (req, res) => {
     });
 });
 
-// Endpoint to delete a task
 app.delete('/tasks/:id', (req, res) => {
     const taskId = req.params.id;
     const query = 'DELETE FROM tasks WHERE id = ?';
@@ -60,7 +74,7 @@ app.delete('/tasks/:id', (req, res) => {
     });
 });
 
-// Start the server
+
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
